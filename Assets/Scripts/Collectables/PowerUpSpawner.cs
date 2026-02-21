@@ -1,10 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-
-/// <summary>
-/// Spawns Booster Bottles and Health Orbs at random floor positions.
-/// Attach to an empty GameObject.
-/// </summary>
 public class PowerUpSpawner : MonoBehaviour
 {
     [Header("Prefabs")]
@@ -36,10 +31,8 @@ public class PowerUpSpawner : MonoBehaviour
 
         if (mazeGen == null || mazeGen.mazeData == null) yield break;
 
-        // Collect all potential tiles that the Grid considers "Empty"
         List<Vector3> potentialPositions = GetPotentialGridPositions();
         
-        // Shuffle to randomize placement
         Shuffle(potentialPositions);
 
         int spawnedBottles = 0;
@@ -47,7 +40,6 @@ public class PowerUpSpawner : MonoBehaviour
 
         foreach (Vector3 pos in potentialPositions)
         {
-            // PHYSICAL CHECK: Is the tile ACTUALLY empty of Walls, Dots, etc?
             if (IsTileTrulyEmpty(pos))
             {
                 if (spawnedBottles < bottleCount)
@@ -74,7 +66,6 @@ public class PowerUpSpawner : MonoBehaviour
                 }
             }
 
-            // Stop if we've spawned everything we need
             if (spawnedBottles >= bottleCount && spawnedOrbs >= orbCount)
                 break;
         }
@@ -82,12 +73,10 @@ public class PowerUpSpawner : MonoBehaviour
 
     private bool IsTileTrulyEmpty(Vector3 position)
     {
-        // Check for any colliders within the tile radius
         Collider[] colliders = Physics.OverlapSphere(position, overlapCheckRadius);
         
         foreach (var col in colliders)
         {
-            // If we hit a wall, a dot, or an energizer, this tile is NOT empty
             if (col.CompareTag("Wall") || col.CompareTag("Dot") || col.CompareTag("Energizer"))
             {
                 return false;
@@ -107,7 +96,6 @@ public class PowerUpSpawner : MonoBehaviour
             for (int col = 0; col < data.width; col++)
             {
                 MazeData.TileType tile = data.GetCell(col, row);
-                // First pass: Only look at tiles metadata says are empty
                 if (tile == MazeData.TileType.Empty)
                 {
                     positions.Add(mazeGen.GridToWorld(col, row));

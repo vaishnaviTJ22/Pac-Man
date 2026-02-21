@@ -1,16 +1,9 @@
 using System.Collections;
 using UnityEngine;
-
-/// <summary>
-/// Assign your 4 ghost GameObjects directly in the Inspector.
-/// This manager handles: staggered release, chase/scatter cycling,
-/// energizer frightened mode, and ghost-eaten events.
-/// </summary>
 public class GhostManager : MonoBehaviour
 {
     public static GhostManager Instance { get; private set; }
 
-    // ── Inspector ─────────────────────────────────────────────────────────────
     [Header("Player Reference")]
     public Transform player;
 
@@ -38,7 +31,6 @@ public class GhostManager : MonoBehaviour
     public float chaseModeDuration = 20f;
     public float scatterModeDuration = 7f;
 
-    // ── Runtime ───────────────────────────────────────────────────────────────
     public GhostController[] ghosts;
     public bool _isChaseMode = true;
     public bool IsChaseMode => _isChaseMode;
@@ -46,7 +38,6 @@ public class GhostManager : MonoBehaviour
     private int ghostsEatenThisEnergizer = 0;
     private static readonly int[] EatScores = { 200, 400, 800, 1600 };
 
-    // ── Unity Lifecycle ───────────────────────────────────────────────────────
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -56,8 +47,6 @@ public class GhostManager : MonoBehaviour
     void Start()
     {
         ghosts = new[] { blinky, pinky, inky, clyde };
-
-        // Push shared references into each ghost
         foreach (var g in ghosts)
         {
             if (g == null) continue;
@@ -67,7 +56,6 @@ public class GhostManager : MonoBehaviour
             g.manager = this;
         }
 
-        // Assign scatter corners if transforms are provided
         if (blinky && blinkyCorner) blinky.scatterTarget = blinkyCorner.position;
         if (pinky && pinkyCorner) pinky.scatterTarget = pinkyCorner.position;
         if (inky && inkyCorner) inky.scatterTarget = inkyCorner.position;
@@ -76,8 +64,6 @@ public class GhostManager : MonoBehaviour
         StartCoroutine(ReleaseGhostsRoutine());
         StartCoroutine(ChaseScatterCycleRoutine());
     }
-
-    // ── Staggered Release ─────────────────────────────────────────────────────
     private IEnumerator ReleaseGhostsRoutine()
     {
         yield return new WaitForSeconds(1f);
@@ -93,7 +79,6 @@ public class GhostManager : MonoBehaviour
         clyde?.Release();
     }
 
-    // ── Chase / Scatter Cycle ─────────────────────────────────────────────────
     private IEnumerator ChaseScatterCycleRoutine()
     {
         Debug.Log("chase scatter");
@@ -118,7 +103,6 @@ public class GhostManager : MonoBehaviour
         }
     }
 
-    // ── Events ────────────────────────────────────────────────────────────────
     public void OnEnergizerEaten()
     {
         ghostsEatenThisEnergizer = 0;
@@ -154,8 +138,6 @@ public class GhostManager : MonoBehaviour
         yield return new WaitForSeconds(releaseInterval);
         ghost.Release();
     }
-
-    /// <summary>Resets all ghosts to their house positions.</summary>
     public void ResetAllGhosts()
     {
         StopAllCoroutines();

@@ -1,9 +1,4 @@
 using UnityEngine;
-
-/// <summary>
-/// Script for Booster Bottle and Health Orb items.
-/// Attach to a prefab with a trigger collider.
-/// </summary>
 public class PowerUpItem : MonoBehaviour
 {
     public enum PowerUpType { BoosterBottle, HealthOrb }
@@ -18,7 +13,6 @@ public class PowerUpItem : MonoBehaviour
 
     void Update()
     {
-        // Simple spin animation
         transform.Rotate(Vector3.up, rotationSpeed * Time.deltaTime);
     }
 

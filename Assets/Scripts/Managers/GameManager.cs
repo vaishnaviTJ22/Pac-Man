@@ -2,16 +2,13 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Manages global game state: Score, Lives, and Round Resets.
-/// Attach to a single GameObject in your scene.
-/// </summary>
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
     [Header("Game State")]
     public string playerName = "Player";
+    private const string PLAYER_NAME_KEY = "PlayerName";
     public int score = 0;
     public int lives = 3;
     public int initialLives = 3;
@@ -47,6 +44,25 @@ public class GameManager : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        LoadPlayerName();
+    }
+
+    private void LoadPlayerName()
+    {
+        if (PlayerPrefs.HasKey(PLAYER_NAME_KEY))
+        {
+            playerName = PlayerPrefs.GetString(PLAYER_NAME_KEY);
+            Debug.Log($"[GameManager] Loaded Player Name: {playerName}");
+        }
+    }
+
+    public void SavePlayerName(string name)
+    {
+        playerName = name;
+        PlayerPrefs.SetString(PLAYER_NAME_KEY, name);
+        PlayerPrefs.Save();
+        Debug.Log($"[GameManager] Saved Player Name: {name}");
     }
 
     void Start()
@@ -79,12 +95,9 @@ public class GameManager : MonoBehaviour
     {
         currentLevel++;
         dotsEaten = 0;
-        // Reload current scene for fresh round
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         Debug.Log($"[GameManager] Level Up! New Level: {currentLevel}");
     }
-
-    /// <summary>Called when Pac-Man is caught by a ghost.</summary>
     public void HandlePlayerDeath()
     {
         if (isResetting) return;
@@ -106,16 +119,13 @@ public class GameManager : MonoBehaviour
     {
         isResetting = true;
         
-        // Pause movement
         if (player != null) player.OnCaughtByGhost();
 
         yield return new WaitForSeconds(resetDelay);
 
-        // Reset positions
         if (player != null) player.ResetToStartPosition();
         if (ghostManager != null) ghostManager.ResetAllGhosts();
 
-        // Revive player
         if (player != null) player.Revive();
 
         isResetting = false;
@@ -126,13 +136,11 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("[GameManager] GAME OVER!");
         
-        // Save to leaderboard
         if (LeaderboardManager.Instance != null)
         {
             LeaderboardManager.Instance.AddScore(playerName, score);
         }
 
-        // Load Leadboard scene
         leaderBoardPanel.SetActive(true);
     }
 
@@ -145,7 +153,7 @@ public class GameManager : MonoBehaviour
     public void OnDotEaten()
     {
         dotsEaten++;
-        AddScore(10); // Standard dot score
+        AddScore(10);
 
         if (dotsEaten == 70)
         {
@@ -155,11 +163,6 @@ public class GameManager : MonoBehaviour
         {
             SpawnFruit(strawberryPrefab);
         }
-
-        // Logic for "Infinity Level": If all dots eaten, move to next level
-        // For this we need a way to know the total dots.
-        // Assuming dot count is handled by the maze generator or similar.
-        // If the user wants PlayAgain to handle the next level, we leave it there.
     }
 
     private void SpawnFruit(GameObject prefab)
@@ -171,11 +174,6 @@ public class GameManager : MonoBehaviour
             : Vector3.zero;
 
         GameObject fruit = Instantiate(prefab, spawnPos, Quaternion.identity);
-        
-        // Add BonusFruit component if not present
-        if (!fruit.GetComponent<BonusFruit>())
-        {
-            fruit.AddComponent<BonusFruit>();
-        }
+      
     }
 }

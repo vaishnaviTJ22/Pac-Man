@@ -13,11 +13,6 @@ public enum GhostState
     Eaten           // Ghost was eaten, returning to house
 }
 
-/// <summary>
-/// Core ghost AI controller. One script instance per ghost.
-/// Attach to each ghost GameObject. Configure type in Inspector.
-/// GhostManager drives state transitions and supplies references.
-/// </summary>
 public class GhostController : MonoBehaviour
 {
     // ── Inspector ────────────────────────────────────────────────────────────
@@ -84,7 +79,7 @@ public class GhostController : MonoBehaviour
     // ── Unity Lifecycle ───────────────────────────────────────────────────────
     void Awake()
     {
-        ghostRenderer = GetComponent<Renderer>();
+        ghostRenderer = GetComponentInChildren<Renderer>();
         startPosition = transform.position;
         mazeGen = FindFirstObjectByType<MazeGenerator>();
     }
@@ -94,7 +89,6 @@ public class GhostController : MonoBehaviour
         if (ghostRenderer != null)
             normalColor = ghostRenderer.material.color;
 
-        // Fallback: find player by tag if GhostManager didn't assign it
         if (playerTransform == null)
         {
             GameObject p = GameObject.FindWithTag("Player");
@@ -122,7 +116,6 @@ public class GhostController : MonoBehaviour
             SetState(GhostState.ExitingHouse);
     }
 
-    /// <summary>Called globally when Pac-Man eats an energizer.</summary>
     public void EnterFrightenedMode()
     {
         if (currentState == GhostState.Eaten) return;  // Already eaten, skip
@@ -133,7 +126,6 @@ public class GhostController : MonoBehaviour
         moveDir = -moveDir;
     }
 
-    /// <summary>Called by GhostManager to globally switch chase/scatter.</summary>
     public void SetChaseMode(bool chase)
     {
        /* if (currentState == GhostState.InHouse ||
@@ -144,7 +136,6 @@ public class GhostController : MonoBehaviour
         SetState(chase ? GhostState.Chase : GhostState.Scatter);
     }
 
-    /// <summary>Resets the ghost to its home position.</summary>
     public void ResetToHouse()
     {
         transform.position = startPosition;
@@ -153,7 +144,6 @@ public class GhostController : MonoBehaviour
         SetState(GhostState.InHouse);
     }
 
-    // ── State Entry ───────────────────────────────────────────────────────────
     private void SetState(GhostState newState)
     {
         currentState = newState;
@@ -176,7 +166,7 @@ public class GhostController : MonoBehaviour
 
             case GhostState.Scatter:
                 if (moveDir == Vector3.zero)
-                    moveDir = Vector3.forward;  // Default start direction
+                    moveDir = Vector3.forward;  
                 UpdateColor(normalColor);
                 activeUpdate = () => UpdateGridMovement(scatterTarget, moveSpeed);
                 break;
@@ -193,19 +183,14 @@ public class GhostController : MonoBehaviour
                 break;
         }
     }
-
-    // ── State Updates ─────────────────────────────────────────────────────────
-
     private void UpdateInHouse()
     {
-        // Bob up and down around start position
         float newY = startPosition.y + Mathf.Sin(Time.time * bobSpeed) * bobAmount;
         transform.position = new Vector3(startPosition.x, newY, startPosition.z);
     }
 
     private void UpdateExiting()
     {
-        // Move toward the exit point
         Vector3 target = houseExitPoint;
         transform.position = Vector3.MoveTowards(transform.position, target,
                                                   moveSpeed * Time.deltaTime);
@@ -222,7 +207,6 @@ public class GhostController : MonoBehaviour
 
     private void UpdateGridMovement(Vector3 finalTarget, float speed)
     {
-        // If we reached the current node, pick the next one
         if (isAtNode)
         {
             moveDir = DecideNextDirection(finalTarget);
@@ -231,7 +215,6 @@ public class GhostController : MonoBehaviour
             isAtNode = false;
         }
 
-        // Move toward target node
         float currentSpeed = speed;
         if (GameManager.Instance != null)
             currentSpeed *= GameManager.Instance.GetSpeedMultiplier();
@@ -243,8 +226,6 @@ public class GhostController : MonoBehaviour
             Quaternion targetRot = Quaternion.LookRotation(moveDir);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, 720f * Time.deltaTime);
         }
-
-        // Check if arrived at node
         if (Vector3.Distance(transform.position, targetNode) < 0.05f)
         {
             transform.position = targetNode; // Snap exactly
@@ -255,8 +236,6 @@ public class GhostController : MonoBehaviour
     private void UpdateFrightened()
     {
         frightenedTimeLeft -= Time.deltaTime;
-
-        // Flash near end
         if (frightenedTimeLeft <= FLASH_START)
         {
             bool flashOn = Mathf.FloorToInt(frightenedTimeLeft * 4) % 2 == 0;
@@ -265,20 +244,15 @@ public class GhostController : MonoBehaviour
 
         if (frightenedTimeLeft <= 0f)
         {
-            // Return to whatever global mode the manager says
             bool globalChase = manager != null && manager.IsChaseMode;
             SetState(globalChase ? GhostState.Chase : GhostState.Scatter);
             return;
         }
-
-        // Move randomly while frightened (non-grid for chaotic effect, or keep grid?)
-        // Let's use grid for frightened too to prevent clipping
         UpdateGridMovement(transform.position + GetSafeRandomDirection(moveDir) * 5f, frightenedSpeed);
     }
 
     private void UpdateEaten()
     {
-        // Navigate toward houseCenter on the grid
         UpdateGridMovement(houseCenter, eatenSpeed);
 
         if (Vector3.Distance(transform.position, houseCenter) < 0.2f)
@@ -289,9 +263,6 @@ public class GhostController : MonoBehaviour
             if (manager != null) manager.ScheduleRespawn(this);
         }
     }
-
-    // ── Per-Ghost Chase Targets ───────────────────────────────────────────────
-
     private Vector3 GetChaseTarget()
     {
         Debug.Log("getchasetarget");
@@ -343,23 +314,16 @@ public class GhostController : MonoBehaviour
         }
     }
 
-    // ── Movement Helper: Navigate Toward Target With Wall Avoidance ──────────
-
-    // The 4 axis-aligned directions a ghost can move (maze has no diagonals)
     private static readonly Vector3[] CardinalDirs =
     {
         Vector3.forward, Vector3.back, Vector3.left, Vector3.right
     };
-
-    // ── Grid Movement Logic ──────────────────────────────────────────────────
 
     private Vector3 DecideNextDirection(Vector3 target)
     {
         Vector3 bestDir = moveDir;
         float shortestDistance = float.MaxValue;
 
-        // Shuffle directions to resolve ties randomly (arcade often has fixed priorities, 
-        // but shuffle feels more natural in 3D)
         Vector3[] dirs = (Vector3[])CardinalDirs.Clone();
         for (int i = 0; i < dirs.Length; i++)
         {
@@ -372,14 +336,11 @@ public class GhostController : MonoBehaviour
 
         foreach (Vector3 dir in dirs)
         {
-            // 1. Ghosts cannot reverse direction (U-turn) unless forced or frightened
             if (dir == -moveDir && currentState != GhostState.Frightened) continue;
 
-            // 2. Dual-Check wall logic
             Vector3 checkNodePos = transform.position + dir * cs;
             if (!IsWallAtWorldPos(checkNodePos, dir))
             {
-                // 3. Calculate distance from THE NEXT TILE center to the target
                 float dist = Vector3.Distance(checkNodePos, target);
                 if (dist < shortestDistance)
                 {
@@ -394,13 +355,9 @@ public class GhostController : MonoBehaviour
         return bestDir;
     }
 
-    // ── Frightened Random Movement ────────────────────────────────────────────
-
     private Vector3 GetSafeRandomDirection(Vector3 currentDir)
     {
-        // Pick a random axis-aligned direction that isn't blocked
         Vector3[] dirs = { Vector3.forward, Vector3.back, Vector3.left, Vector3.right };
-        // Shuffle
         for (int i = dirs.Length - 1; i > 0; i--)
         {
             int j = Random.Range(0, i + 1);
@@ -409,35 +366,29 @@ public class GhostController : MonoBehaviour
 
         foreach (var d in dirs)
         {
-            if (d == -currentDir) continue; // Avoid immediate U-turn if possible
+            if (d == -currentDir) continue;
             if (!IsWallInDirection(d))
                 return d;
         }
-        return -currentDir; // U-turn as last resort
+        return -currentDir; 
     }
-
-    // ── Collision: Ghost Eats Pac-Man or Gets Eaten ───────────────────────────
-
     private void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
 
         if (currentState == GhostState.Frightened)
         {
-            // Pac-Man eats ghost
             if (manager != null) manager.OnGhostEaten(this);
             SetState(GhostState.Eaten);
         }
         else if (currentState == GhostState.Chase || currentState == GhostState.Scatter)
         {
-            // Ghost catches Pac-Man
             if (manager != null) manager.OnPlayerCaught();
         }
     }
 
     private bool IsWallAtWorldPos(Vector3 worldPos, Vector3 direction)
     {
-        // Check 1: Grid Data
         if (mazeGen != null && mazeGen.mazeData != null)
         {
             Vector2Int gridPos = mazeGen.WorldToGrid(worldPos);
@@ -445,7 +396,6 @@ public class GhostController : MonoBehaviour
                 return true;
         }
 
-        // Check 2: Physical Collision
         Vector3 origin = transform.position + Vector3.up * WALL_RAY_UP_OFFSET;
         float rayDist = 0.5f;
         
@@ -456,7 +406,6 @@ public class GhostController : MonoBehaviour
                 hitWall = true;
         }
 
-        // Visual Debug: Red line if blocked, Green if clear
         Debug.DrawRay(origin, direction * rayDist, hitWall ? Color.red : Color.green);
 
         return hitWall;
@@ -470,7 +419,6 @@ public class GhostController : MonoBehaviour
         return mazeGen.mazeData.GetCell(gridPos.x, gridPos.y) == MazeData.TileType.Wall;
     }
 
-    /// <summary>Returns true if a wall (by tag) is physically present.</summary>
     private bool IsWallInDirection(Vector3 direction)
     {
         Vector3 origin = transform.position + Vector3.up * WALL_RAY_UP_OFFSET;
@@ -483,7 +431,6 @@ public class GhostController : MonoBehaviour
                 hitWall = true;
         }
 
-        // Visual Debug: Red line if blocked, Green if clear
         Debug.DrawRay(origin, direction * rayDist, hitWall ? Color.red : Color.green);
 
         return hitWall;
@@ -504,23 +451,4 @@ public class GhostController : MonoBehaviour
             return new Vector3(0, 0, Mathf.Sign(v.z));
     }
 
-    // ── Gizmos ────────────────────────────────────────────────────────────────
-#if UNITY_EDITOR
-    private void OnDrawGizmos()
-    {
-        if (!Application.isPlaying) return;
-
-        // Draw the target node we are moving toward
-        Gizmos.color = Color.magenta;
-        Gizmos.DrawWireCube(targetNode, Vector3.one * 0.4f);
-        
-        // Draw a line to the target node
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(transform.position, targetNode);
-
-        // Draw the scatter target (home corner)
-        Gizmos.color = new Color(1, 0.5f, 0, 0.5f); // Orange
-        Gizmos.DrawWireSphere(scatterTarget, 0.5f);
-    }
-#endif
 }

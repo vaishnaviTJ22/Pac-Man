@@ -32,13 +32,20 @@ public class MainMenuUI : MonoBehaviour
         if (string.IsNullOrWhiteSpace(playerName))
         {
             if (warningText != null)
+            {
+                warningText.text = "Please enter the name..";
                 warningText.gameObject.SetActive(true);
+            }
+                
             
             Debug.Log("[MainMenuUI] Name is empty. Showing warning.");
             return;
         }
 
         // If name is valid, proceed
+        PlayerPrefs.SetString("PlayerName", playerName);
+        PlayerPrefs.Save();
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.playerName = playerName;

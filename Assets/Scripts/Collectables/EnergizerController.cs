@@ -1,15 +1,4 @@
 using UnityEngine;
-
-/// <summary>
-/// Attach this to any energizer (power pellet) object in the scene.
-/// When Pac-Man walks into it, all ghosts enter Frightened mode.
-///
-/// Setup:
-/// 1. Create a small sphere or capsule in the maze at each power-pellet position.
-/// 2. Add this script.
-/// 3. Make the collider a Trigger (tick "Is Trigger" in the Collider component).
-/// 4. Tag Pac-Man as "Player".
-/// </summary>
 public class EnergizerController : MonoBehaviour
 {
     [Header("Visual Pulse")]
@@ -27,8 +16,7 @@ public class EnergizerController : MonoBehaviour
     void Start()
     {
         baseScale = transform.localScale;
-        energizerRenderer = GetComponent<Renderer>();
-        // Give it a bright white/yellow emissive look
+        energizerRenderer = GetComponentInChildren<Renderer>();
         if (energizerRenderer != null)
         {
             Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
@@ -42,7 +30,6 @@ public class EnergizerController : MonoBehaviour
 
     void Update()
     {
-        // Pulsing scale animation
         float scale = 1f + Mathf.Sin(Time.time * pulseSpeed) * pulseAmount;
         transform.localScale = baseScale * scale;
     }
@@ -51,7 +38,6 @@ public class EnergizerController : MonoBehaviour
     {
         if (!other.CompareTag("Player")) return;
 
-        // Notify GhostManager
         if (GhostManager.Instance != null)
             GhostManager.Instance.OnEnergizerEaten();
 
@@ -60,7 +46,6 @@ public class EnergizerController : MonoBehaviour
 
         Debug.Log($"[Energizer] Collected! +{scoreValue} points");
 
-        // Deactivate (hide) the energizer
         gameObject.SetActive(false);
     }
 }
