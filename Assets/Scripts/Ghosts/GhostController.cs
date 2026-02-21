@@ -131,7 +131,11 @@ public class GhostController : MonoBehaviour
     {
         if (currentState == GhostState.Eaten) return;  // Already eaten, skip
 
-        frightenedTimeLeft = FRIGHTENED_DURATION;
+        float duration = FRIGHTENED_DURATION;
+        if (GameManager.Instance != null)
+            duration = GameManager.Instance.GetPowerUpDuration();
+
+        frightenedTimeLeft = duration;
         SetState(GhostState.Frightened);
         // Reverse direction immediately
         moveDir = -moveDir;
@@ -229,8 +233,8 @@ public class GhostController : MonoBehaviour
         }
 
         float currentSpeed = speed;
-        if (GameManager.Instance != null)
-            currentSpeed *= GameManager.Instance.GetSpeedMultiplier();
+        if (GameManager.Instance != null && speed == moveSpeed)
+            currentSpeed = GameManager.Instance.GetEnemySpeed();
 
         transform.position = Vector3.MoveTowards(transform.position, targetNode, currentSpeed * Time.deltaTime);
 

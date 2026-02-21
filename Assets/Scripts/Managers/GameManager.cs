@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     public string playerName = "Player";
     private const string PLAYER_NAME_KEY = "PlayerName";
     public int score = 0;
+    public int overallScore = 0;
     public int lives = 3;
     public int initialLives = 3;
     public int currentLevel = 1;
@@ -17,6 +18,7 @@ public class GameManager : MonoBehaviour
     [Header("References")]
     public PlayerController player;
     public GhostManager ghostManager;
+    public MazeGenerator mazeGenerator;
     public GameObject leaderBoardPanel;
 
     [Header("Settings")]
@@ -25,14 +27,15 @@ public class GameManager : MonoBehaviour
     public string leaderboardSceneName = "Leaderboard";
 
     [Header("Difficulty Scaling")]
-    public float speedIncreasePerLevel = 0.1f;
-    public float intervalIncreasePerLevel = 0.2f;
+    public GameDifficultyData difficultyData;
 
     [Header("Fruit Prefabs")]
     public GameObject cherryPrefab;
     public GameObject strawberryPrefab;
 
     private int dotsEaten = 0;
+    public int totalDots = 0;
+    public bool levelWon = false;
     private bool isResetting = false;
 
     void Awake()
@@ -70,32 +73,60 @@ public class GameManager : MonoBehaviour
         ResetGame();
     }
 
-    public void ResetGame(bool resetLevel = false)
+    public void ResetGame(bool fullRestart = false)
     {
-        leaderBoardPanel.SetActive(false);
-        score = 0;
-        lives = initialLives;
-        dotsEaten = 0;
-        if (resetLevel) currentLevel = 1;
+        if (leaderBoardPanel != null) leaderBoardPanel.SetActive(false);
         
-        Debug.Log($"[GameManager] Game Reset. Level: {currentLevel}");
+        score = 0;
+        dotsEaten = 0;
+        levelWon = false;
+        
+        if (fullRestart)
+        {
+            currentLevel = 1;
+            overallScore = 0;
+            lives = initialLives;
+            if (difficultyData != null) difficultyData.ResetData();
+        }
+        
+        // In-place reset logic
+        if (mazeGenerator != null) mazeGenerator.Generate();
+        if (player != null) 
+        {
+            player.ResetToStartPosition();
+            player.Revive();
+        }
+        if (ghostManager != null) ghostManager.ResetAllGhosts();
+
+        Debug.Log($"[GameManager] Game Reset. Level: {currentLevel}, Overall Score: {overallScore}");
     }
 
-    public float GetSpeedMultiplier()
+    public float GetPlayerSpeed()
     {
-        return 1.0f + (currentLevel - 1) * speedIncreasePerLevel;
+        return difficultyData != null ? difficultyData.GetPlayerSpeed() : 5f;
     }
 
-    public float GetIntervalMultiplier()
+    public float GetEnemySpeed()
     {
-        return 1.0f + (currentLevel - 1) * intervalIncreasePerLevel;
+        return difficultyData != null ? difficultyData.GetEnemySpeed() : 4f;
+    }
+
+    public float GetPowerUpInterval()
+    {
+        return difficultyData != null ? difficultyData.GetPowerUpInterval() : 10f;
+    }
+
+    public float GetPowerUpDuration()
+    {
+        return difficultyData != null ? difficultyData.GetPowerUpDuration() : 8f;
     }
 
     public void IncrementLevel()
     {
         currentLevel++;
-        dotsEaten = 0;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        if (difficultyData != null) difficultyData.IncrementLevel();
+        
+        ResetGame(false); // Start next level in-place
         Debug.Log($"[GameManager] Level Up! New Level: {currentLevel}");
     }
     public void HandlePlayerDeath()
@@ -135,13 +166,28 @@ public class GameManager : MonoBehaviour
     private void GameOver()
     {
         Debug.Log("[GameManager] GAME OVER!");
+        levelWon = false;
         
         if (LeaderboardManager.Instance != null)
         {
-            LeaderboardManager.Instance.AddScore(playerName, score);
+            LeaderboardManager.Instance.AddScore(playerName, overallScore + score);
         }
 
-        leaderBoardPanel.SetActive(true);
+        if (leaderBoardPanel != null) leaderBoardPanel.SetActive(true);
+    }
+
+    public void LevelCompleted()
+    {
+        Debug.Log("[GameManager] LEVEL COMPLETED!");
+        levelWon = true;
+        overallScore += score; // Add current level score to overall total
+
+        if (LeaderboardManager.Instance != null)
+        {
+            LeaderboardManager.Instance.AddScore(playerName, overallScore);
+        }
+
+        if (leaderBoardPanel != null) leaderBoardPanel.SetActive(true);
     }
 
     public void AddScore(int amount)
@@ -162,6 +208,11 @@ public class GameManager : MonoBehaviour
         else if (dotsEaten == 170)
         {
             SpawnFruit(strawberryPrefab);
+        }
+
+        if (dotsEaten >= totalDots && totalDots > 0)
+        {
+            LevelCompleted();
         }
     }
 

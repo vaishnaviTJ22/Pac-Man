@@ -36,6 +36,7 @@ public class MazeGenerator : MonoBehaviour
         mazeRoot.localPosition = Vector3.zero;
 
         float cs = mazeData.cellSize;
+        int dotCount = 0;
 
         for (int row = 0; row < mazeData.height; row++)
         for (int col = 0; col < mazeData.width;  col++)
@@ -52,11 +53,13 @@ public class MazeGenerator : MonoBehaviour
                 case MazeData.TileType.Dot:
                     SpawnFloor(pos, cs);
                     SpawnDot(pos, cs);
+                    dotCount++;
                     break;
 
                 case MazeData.TileType.Energizer:
                     SpawnFloor(pos, cs);
                     SpawnEnergizer(pos, cs);
+                    dotCount++;
                     break;
 
                 case MazeData.TileType.PlayerStart:
@@ -76,7 +79,12 @@ public class MazeGenerator : MonoBehaviour
             }
         }
 
-        Debug.Log($"[MazeGenerator] Generated {mazeData.width}×{mazeData.height} maze.");
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.totalDots = dotCount;
+        }
+
+        Debug.Log($"[MazeGenerator] Generated {mazeData.width}×{mazeData.height} maze with {dotCount} dots.");
     }
 
     public void ClearGenerated()
@@ -126,6 +134,7 @@ public class MazeGenerator : MonoBehaviour
         go.tag = "Dot";
         var col = go.GetComponent<Collider>();
         col.isTrigger = true;
+        go.AddComponent<DotController>();
         go.transform.SetParent(mazeRoot);
     }
 

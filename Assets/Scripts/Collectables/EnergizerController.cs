@@ -42,7 +42,10 @@ public class EnergizerController : MonoBehaviour
             GhostManager.Instance.OnEnergizerEaten();
 
         if (GameManager.Instance != null)
+        {
             GameManager.Instance.AddScore(scoreValue);
+            GameManager.Instance.OnDotEaten();
+        }
 
         Debug.Log($"[Energizer] Collected! +{scoreValue} points");
 

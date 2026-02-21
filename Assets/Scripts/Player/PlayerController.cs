@@ -77,9 +77,8 @@ public class PlayerController : MonoBehaviour
     {
         if (isDead) return;
 
-        float speed = moveSpeed * currentSpeedMultiplier;
-        if (GameManager.Instance != null)
-            speed *= GameManager.Instance.GetSpeedMultiplier();
+        float speed = GameManager.Instance != null ? GameManager.Instance.GetPlayerSpeed() : moveSpeed;
+        speed *= currentSpeedMultiplier;
             
         Vector3 newPos = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.fixedDeltaTime);
         rb.MovePosition(newPos);

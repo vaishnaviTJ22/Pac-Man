@@ -8,11 +8,21 @@ public class LeaderboardUI : MonoBehaviour
     [Header("UI References")]
     public GameObject entryPrefab;
     public Transform entryContainer;
+    public TextMeshProUGUI playAgainButtonText;
     public string mainMenuSceneName = "Login"; // Based on existing scenes
 
     void OnEnable()
     {
         DisplayLeaderboard();
+        UpdatePlayAgainButton();
+    }
+
+    private void UpdatePlayAgainButton()
+    {
+        if (playAgainButtonText != null && GameManager.Instance != null)
+        {
+            playAgainButtonText.text = GameManager.Instance.levelWon ? "Next Level" : "Play Again";
+        }
     }
 
     public void DisplayLeaderboard()
@@ -55,12 +65,16 @@ public class LeaderboardUI : MonoBehaviour
     {
         if (GameManager.Instance != null)
         {
-            // This will increment level and reload the scene
-            GameManager.Instance.IncrementLevel();
-        }
-        else
-        {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            if (GameManager.Instance.levelWon)
+            {
+                // Progress to next level in-place
+                GameManager.Instance.IncrementLevel();
+            }
+            else
+            {
+                // Restart same level in-place (no scene reload)
+                GameManager.Instance.ResetGame(false);
+            }
         }
     }
 

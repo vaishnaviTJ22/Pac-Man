@@ -7,6 +7,7 @@ public class GameplayHUD : MonoBehaviour
     public TextMeshProUGUI nameText;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI lifeText;
+    public TextMeshProUGUI levelText;
 
     void Start()
     {
@@ -31,6 +32,9 @@ public class GameplayHUD : MonoBehaviour
 
             if(lifeText != null)
                 lifeText.text="Life: "+GameManager.Instance.lives.ToString();
+
+            if (levelText != null)
+                levelText.text = "Level: " + GameManager.Instance.currentLevel.ToString();
         }
     }
 }
