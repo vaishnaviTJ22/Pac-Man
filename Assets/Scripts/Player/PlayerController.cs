@@ -197,6 +197,7 @@ public class PlayerController : MonoBehaviour
 
     private System.Collections.IEnumerator SpeedBoostRoutine(float duration, float multiplier)
     {
+        
         currentSpeedMultiplier = multiplier;
         UpdatePlayerColor();
         yield return new WaitForSeconds(duration);
@@ -230,7 +231,7 @@ public class PlayerController : MonoBehaviour
         {
             playerRenderer.material.color = Color.green;
         }
-        else if (speedCoroutine != null)
+        else if (currentSpeedMultiplier > 1f)
         {
             playerRenderer.material.color = Color.red;
         }

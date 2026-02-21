@@ -66,11 +66,7 @@ public class LeaderboardUI : MonoBehaviour
 
     public void ReturnToMainMenu()
     {
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.ResetGame(true);
-        }
-
+       
         SceneManager.LoadScene(mainMenuSceneName);
     }
 }
