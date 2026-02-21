@@ -1,9 +1,4 @@
 using UnityEngine;
-
-/// <summary>
-/// Stores the maze layout as a flat int array.
-/// Create via: Assets → right-click → Create → PacMan → Maze Data
-/// </summary>
 [CreateAssetMenu(fileName = "MazeData", menuName = "PacMan/Maze Data")]
 public class MazeData : ScriptableObject
 {
@@ -24,8 +19,6 @@ public class MazeData : ScriptableObject
 
     [Header("Cell size in Unity units")]
     public float cellSize = 1f;
-
-    // Flat array: index = row * width + col
     [SerializeField] private int[] cells;
 
     // ── API ───────────────────────────────────────────────────────────────────
@@ -44,8 +37,6 @@ public class MazeData : ScriptableObject
 
     public bool InBounds(int col, int row)
         => col >= 0 && col < width && row >= 0 && row < height;
-
-    /// <summary>Resize and clear the grid (call from Editor).</summary>
     public void Resize(int newWidth, int newHeight)
     {
         int[] old = cells;
@@ -54,8 +45,6 @@ public class MazeData : ScriptableObject
         width  = newWidth;
         height = newHeight;
         cells  = new int[width * height];
-
-        // Fill edges with Wall by default
         for (int r = 0; r < height; r++)
         for (int c = 0; c < width;  c++)
         {
@@ -63,7 +52,6 @@ public class MazeData : ScriptableObject
             cells[r * width + c] = edge ? (int)TileType.Wall : (int)TileType.Empty;
         }
 
-        // Copy old data that fits
         if (old != null)
             for (int r = 0; r < Mathf.Min(oldH, height); r++)
             for (int c = 0; c < Mathf.Min(oldW, width);  c++)
@@ -73,7 +61,6 @@ public class MazeData : ScriptableObject
     public void Clear()
     {
         cells = new int[width * height];
-        // Border walls
         for (int r = 0; r < height; r++)
         for (int c = 0; c < width;  c++)
         {

@@ -69,8 +69,6 @@ public class LeaderboardUI : MonoBehaviour
         if (GameManager.Instance != null)
         {
             GameManager.Instance.ResetGame(true);
-            // If the manager is persistent, we need to hide the panel manually 
-            // or just load the menu scene which will handle its own UI
         }
 
         SceneManager.LoadScene(mainMenuSceneName);

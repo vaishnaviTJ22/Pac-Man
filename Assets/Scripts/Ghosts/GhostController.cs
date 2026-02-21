@@ -55,7 +55,7 @@ public class GhostController : MonoBehaviour
     // Timers / helpers
     private float randomDirTimer = 0f;
     private const float RANDOM_DIR_INTERVAL = 1.5f;
-    private const float WALL_RAY_UP_OFFSET  = 0.2f;
+    private const float WALL_RAY_UP_OFFSET = 0.2f;
 
     // Grid Movement
     private Vector3 targetNode;
@@ -64,9 +64,10 @@ public class GhostController : MonoBehaviour
     // Frightened flash near end of mode
     private bool isFrightened => currentState == GhostState.Frightened;
     private Renderer ghostRenderer;
-    private Color normalColor;
-    private Color frightenedColor = Color.blue;
-    private Color flashColor      = Color.white;
+    [Header("Colors")]
+    public Color normalColor;
+    public Color frightenedColor = Color.blue;
+    public Color flashColor = Color.white;
     private float frightenedTimeLeft = 0f;
     private const float FRIGHTENED_DURATION = 8f;
     private const float FLASH_START = 2f;
@@ -87,7 +88,17 @@ public class GhostController : MonoBehaviour
     void Start()
     {
         if (ghostRenderer != null)
-            normalColor = ghostRenderer.material.color;
+        {
+            // If normalColor is black or unassigned, try to capture it or set defaults
+            if (IsColorBlackOrClear(normalColor))
+                normalColor = ghostRenderer.material.color;
+        }
+
+        if (IsColorBlackOrClear(normalColor))
+        {
+            normalColor = GetClassicColor(ghostType);
+            UpdateColor(normalColor);
+        }
 
         if (playerTransform == null)
         {
@@ -128,10 +139,10 @@ public class GhostController : MonoBehaviour
 
     public void SetChaseMode(bool chase)
     {
-       /* if (currentState == GhostState.InHouse ||
-           // currentState == GhostState.ExitingHouse ||
-            currentState == GhostState.Frightened ||
-            currentState == GhostState.Eaten) return;*/
+        /* if (currentState == GhostState.InHouse ||
+            // currentState == GhostState.ExitingHouse ||
+             currentState == GhostState.Frightened ||
+             currentState == GhostState.Eaten) return;*/
         Debug.Log("setchase mode");
         SetState(chase ? GhostState.Chase : GhostState.Scatter);
     }
@@ -147,10 +158,11 @@ public class GhostController : MonoBehaviour
     private void SetState(GhostState newState)
     {
         currentState = newState;
-        Debug.Log("current state : "+currentState); 
+        Debug.Log("current state : " + currentState);
         switch (newState)
         {
             case GhostState.InHouse:
+                UpdateColor(normalColor);
                 activeUpdate = UpdateInHouse;
                 break;
 
@@ -161,12 +173,13 @@ public class GhostController : MonoBehaviour
 
             case GhostState.Chase:
                 Debug.Log("chase mode");
+                UpdateColor(normalColor);
                 activeUpdate = () => UpdateGridMovement(GetChaseTarget(), moveSpeed);
                 break;
 
             case GhostState.Scatter:
                 if (moveDir == Vector3.zero)
-                    moveDir = Vector3.forward;  
+                    moveDir = Vector3.forward;
                 UpdateColor(normalColor);
                 activeUpdate = () => UpdateGridMovement(scatterTarget, moveSpeed);
                 break;
@@ -276,38 +289,38 @@ public class GhostController : MonoBehaviour
 
             // ── Pinky: 4 units ahead of Pac-Man's facing direction ─────────
             case GhostType.Pinky:
-            {
-                Vector3 pacForward = playerTransform.forward;
-                // Clamp to nearest axis (arcade accuracy)
-                pacForward = SnapToAxis(pacForward);
-                return playerTransform.position + pacForward * 4f;
-            }
+                {
+                    Vector3 pacForward = playerTransform.forward;
+                    // Clamp to nearest axis (arcade accuracy)
+                    pacForward = SnapToAxis(pacForward);
+                    return playerTransform.position + pacForward * 4f;
+                }
 
             // ── Inky: hybrid — sometimes random, sometimes targeting ────────
             case GhostType.Inky:
-            {
-                randomDirTimer -= Time.deltaTime;
-                if (randomDirTimer <= 0f)
                 {
-                    randomDirTimer = RANDOM_DIR_INTERVAL;
-                    // 50% chance to target Pac-Man, 50% random wander
-                    if (Random.value < 0.5f)
-                        return playerTransform.position;
-                    else
-                        return transform.position + GetSafeRandomDirection(moveDir) * 5f;
+                    randomDirTimer -= Time.deltaTime;
+                    if (randomDirTimer <= 0f)
+                    {
+                        randomDirTimer = RANDOM_DIR_INTERVAL;
+                        // 50% chance to target Pac-Man, 50% random wander
+                        if (Random.value < 0.5f)
+                            return playerTransform.position;
+                        else
+                            return transform.position + GetSafeRandomDirection(moveDir) * 5f;
+                    }
+                    return playerTransform.position;
                 }
-                return playerTransform.position;
-            }
 
             // ── Clyde: chase when far, scatter to corner when close ─────────
             case GhostType.Clyde:
-            {
-                float dist = Vector3.Distance(transform.position, playerTransform.position);
-                if (dist > 8f)
-                    return playerTransform.position;      // Chase
-                else
-                    return scatterTarget;                 // Retreat to patrol corner
-            }
+                {
+                    float dist = Vector3.Distance(transform.position, playerTransform.position);
+                    if (dist > 8f)
+                        return playerTransform.position;      // Chase
+                    else
+                        return scatterTarget;                 // Retreat to patrol corner
+                }
 
             default:
                 return playerTransform.position;
@@ -370,7 +383,7 @@ public class GhostController : MonoBehaviour
             if (!IsWallInDirection(d))
                 return d;
         }
-        return -currentDir; 
+        return -currentDir;
     }
     private void OnTriggerEnter(Collider other)
     {
@@ -398,7 +411,7 @@ public class GhostController : MonoBehaviour
 
         Vector3 origin = transform.position + Vector3.up * WALL_RAY_UP_OFFSET;
         float rayDist = 0.5f;
-        
+
         bool hitWall = false;
         if (Physics.Raycast(origin, direction, out RaycastHit hit, rayDist))
         {
@@ -449,6 +462,23 @@ public class GhostController : MonoBehaviour
             return new Vector3(Mathf.Sign(v.x), 0, 0);
         else
             return new Vector3(0, 0, Mathf.Sign(v.z));
+    }
+
+    private Color GetClassicColor(GhostType type)
+    {
+        switch (type)
+        {
+            case GhostType.Blinky: return Color.red;
+            case GhostType.Pinky: return new Color(1f, 0.73f, 0.83f); // Pinkish
+            case GhostType.Inky: return Color.cyan;
+            case GhostType.Clyde: return new Color(1f, 0.53f, 0f);    // Orange
+            default: return Color.white;
+        }
+    }
+
+    private bool IsColorBlackOrClear(Color c)
+    {
+        return c.a < 0.1f || (c.r < 0.1f && c.g < 0.1f && c.b < 0.1f);
     }
 
 }

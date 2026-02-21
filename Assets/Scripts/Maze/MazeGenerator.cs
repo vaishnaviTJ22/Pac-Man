@@ -1,14 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-
-/// <summary>
-/// Reads a MazeData asset and builds the maze in the scene.
-/// Attach to an empty GameObject. Assign MazeData in Inspector.
-/// 
-/// Call Generate() from the Editor button or at runtime.
-/// Previously generated objects are stored under a child "GeneratedMaze"
-/// so Clear() removes only them.
-/// </summary>
 public class MazeGenerator : MonoBehaviour
 {
     [Header("Maze Layout")]
@@ -30,11 +21,8 @@ public class MazeGenerator : MonoBehaviour
     public Transform playerStartMarker;
     public Transform ghostStartMarker;
 
-    // Parent that holds all generated objects
     private Transform mazeRoot;
     private const string ROOT_NAME = "GeneratedMaze";
-
-    // ── Public API ────────────────────────────────────────────────────────────
 
     public void Generate()
     {
@@ -93,7 +81,6 @@ public class MazeGenerator : MonoBehaviour
 
     public void ClearGenerated()
     {
-        // Find and destroy existing root (works in Edit and Play mode)
         Transform existing = transform.Find(ROOT_NAME);
         if (existing != null)
         {

@@ -462,9 +462,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe33129ea5cad7045a41ecf188711de8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nameInputField: {fileID: 0}
-  startButton: {fileID: 0}
-  warningText: {fileID: 0}
+  nameInputField: {fileID: 1527802882}
+  startButton: {fileID: 749694099}
+  warningText: {fileID: 1695922502}
   gameSceneName: GamePlay
 --- !u!4 &290902584
 Transform:
