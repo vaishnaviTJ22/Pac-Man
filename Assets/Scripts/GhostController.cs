@@ -232,7 +232,11 @@ public class GhostController : MonoBehaviour
         }
 
         // Move toward target node
-        transform.position = Vector3.MoveTowards(transform.position, targetNode, speed * Time.deltaTime);
+        float currentSpeed = speed;
+        if (GameManager.Instance != null)
+            currentSpeed *= GameManager.Instance.GetSpeedMultiplier();
+
+        transform.position = Vector3.MoveTowards(transform.position, targetNode, currentSpeed * Time.deltaTime);
 
         if (moveDir != Vector3.zero)
         {

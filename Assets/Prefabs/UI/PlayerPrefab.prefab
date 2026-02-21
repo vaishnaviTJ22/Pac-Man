@@ -148,6 +148,7 @@ GameObject:
   - component: {fileID: 8091196800192779623}
   - component: {fileID: 2870124096704676479}
   - component: {fileID: 8110897228185333461}
+  - component: {fileID: 6702112018941548526}
   m_Layer: 5
   m_Name: PlayerPrefab
   m_TagString: Untagged
@@ -215,6 +216,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &6702112018941548526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4174456738030439776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f8a2de47c82f8849a08a67498fc352e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rankText: {fileID: 7767448478415791576}
+  playerNameText: {fileID: 275662905393453742}
+  scoreText: {fileID: 6349245505849300174}
 --- !u!1 &4443947213291627330
 GameObject:
   m_ObjectHideFlags: 0

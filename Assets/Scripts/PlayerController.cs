@@ -90,6 +90,9 @@ public class PlayerController : MonoBehaviour
 
         // 3. Move towards the target center
         float speed = moveSpeed * currentSpeedMultiplier;
+        if (GameManager.Instance != null)
+            speed *= GameManager.Instance.GetSpeedMultiplier();
+            
         Vector3 newPos = Vector3.MoveTowards(transform.position, targetPosition, speed * Time.fixedDeltaTime);
         rb.MovePosition(newPos);
 

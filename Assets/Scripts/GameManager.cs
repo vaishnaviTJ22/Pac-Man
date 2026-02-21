@@ -11,17 +11,25 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("Game State")]
+    public string playerName = "Player";
     public int score = 0;
     public int lives = 3;
     public int initialLives = 3;
+    public int currentLevel = 1;
 
     [Header("References")]
     public PlayerController player;
     public GhostManager ghostManager;
+    public GameObject leaderBoardPanel;
 
     [Header("Settings")]
     public float resetDelay = 2f;
     public float fruitDuration = 9f;
+    public string leaderboardSceneName = "Leaderboard";
+
+    [Header("Difficulty Scaling")]
+    public float speedIncreasePerLevel = 0.1f;
+    public float intervalIncreasePerLevel = 0.2f;
 
     [Header("Fruit Prefabs")]
     public GameObject cherryPrefab;
@@ -38,8 +46,7 @@ public class GameManager : MonoBehaviour
             return;
         }
         Instance = this;
-        // Optional: Keep across scenes
-        // DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(gameObject);
     }
 
     void Start()
@@ -47,12 +54,34 @@ public class GameManager : MonoBehaviour
         ResetGame();
     }
 
-    public void ResetGame()
+    public void ResetGame(bool resetLevel = false)
     {
+        leaderBoardPanel.SetActive(false);
         score = 0;
         lives = initialLives;
         dotsEaten = 0;
-        // Update UI here if you have one
+        if (resetLevel) currentLevel = 1;
+        
+        Debug.Log($"[GameManager] Game Reset. Level: {currentLevel}");
+    }
+
+    public float GetSpeedMultiplier()
+    {
+        return 1.0f + (currentLevel - 1) * speedIncreasePerLevel;
+    }
+
+    public float GetIntervalMultiplier()
+    {
+        return 1.0f + (currentLevel - 1) * intervalIncreasePerLevel;
+    }
+
+    public void IncrementLevel()
+    {
+        currentLevel++;
+        dotsEaten = 0;
+        // Reload current scene for fresh round
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        Debug.Log($"[GameManager] Level Up! New Level: {currentLevel}");
     }
 
     /// <summary>Called when Pac-Man is caught by a ghost.</summary>
@@ -96,8 +125,15 @@ public class GameManager : MonoBehaviour
     private void GameOver()
     {
         Debug.Log("[GameManager] GAME OVER!");
-        // Reload scene for now, or show UI
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        
+        // Save to leaderboard
+        if (LeaderboardManager.Instance != null)
+        {
+            LeaderboardManager.Instance.AddScore(playerName, score);
+        }
+
+        // Load Leadboard scene
+        leaderBoardPanel.SetActive(true);
     }
 
     public void AddScore(int amount)
@@ -119,6 +155,11 @@ public class GameManager : MonoBehaviour
         {
             SpawnFruit(strawberryPrefab);
         }
+
+        // Logic for "Infinity Level": If all dots eaten, move to next level
+        // For this we need a way to know the total dots.
+        // Assuming dot count is handled by the maze generator or similar.
+        // If the user wants PlayAgain to handle the next level, we leave it there.
     }
 
     private void SpawnFruit(GameObject prefab)

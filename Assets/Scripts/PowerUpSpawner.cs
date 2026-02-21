@@ -54,13 +54,23 @@ public class PowerUpSpawner : MonoBehaviour
                 {
                     Instantiate(bottlePrefab, pos + Vector3.up * spawnHeightOffset, Quaternion.identity);
                     spawnedBottles++;
-                    yield return new WaitForSeconds(spawnInterval);
+                    
+                    float currentInterval = spawnInterval;
+                    if (GameManager.Instance != null)
+                        currentInterval *= GameManager.Instance.GetIntervalMultiplier();
+
+                    yield return new WaitForSeconds(currentInterval);
                 }
                 else if (spawnedOrbs < orbCount)
                 {
                     Instantiate(orbPrefab, pos + Vector3.up * spawnHeightOffset, Quaternion.identity);
                     spawnedOrbs++;
-                    yield return new WaitForSeconds(spawnInterval);
+                    
+                    float currentInterval = spawnInterval;
+                    if (GameManager.Instance != null)
+                        currentInterval *= GameManager.Instance.GetIntervalMultiplier();
+                        
+                    yield return new WaitForSeconds(currentInterval);
                 }
             }
 
